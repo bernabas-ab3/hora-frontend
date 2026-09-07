@@ -17,10 +17,15 @@ export const apiCall = async (endpoint, options = {}) => {
     headers,
   });
 
-  const data = await response.json();
+  const contentType = response.headers.get('content-type') || '';
+  const data = contentType.includes('application/json')
+    ? await response.json()
+    : { message: (await response.text()).replace(/<[^>]*>/g, '').trim() };
 
   if (!response.ok) {
-    const error = new Error(data.message || `HTTP Error: ${response.status}`);
+    const error = new Error(
+      data.message || `HTTP Error: ${response.status}`
+    );
     error.status = response.status;
     error.data = data;
     throw error;
